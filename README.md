@@ -149,12 +149,31 @@ pip install -r requirements.txt
 cp etc/cowrie.cfg.dist etc/cowrie.cfg
 ```
 
-Key settings in `etc/cowrie.cfg`:
+Then edit `etc/cowrie.cfg`:
+
 - Keep the SSH listener on **port 2222** (default).
-- Point Cowrie's command handling at your backend URL, e.g. `http://<backend-host>:8000`.
-  This is the custom integration hook you added so that commands Cowrie doesn't answer
-  natively are POSTed to `/v1/chat/completions` and the raw response is returned to the
-  attacker. Set the backend host/port there.
+- **Switch the backend to the LLM engine and point it at the serve machine.** In the
+  LLM-backend section, set `backend = llm` and set `host` to the **IP of the machine
+  running `serve_final.py`** (and the port it serves on, `8000`):
+
+```ini
+# etc/cowrie.cfg — LLM backend integration
+[backend]
+backend = llm
+
+[llm]
+host = <SERVE_MACHINE_IP>          # IP of the machine running serve_final.py
+port = 8000                        # backend Flask port
+endpoint = /v1/chat/completions
+```
+
+- Use the serve machine's **reachable IP** (LAN or public) — not `localhost`, unless
+  Cowrie and the backend run on the same host. Make sure that IP:port is reachable from
+  the Cowrie host (open port 8000 in the firewall / security group).
+- Match the exact section/key names to the LLM-backend integration in your build; the
+  important part is `backend = llm` and the `host` pointing at the serve machine.
+
+Restart Cowrie after editing (see below) so the new backend/host take effect.
 
 ### 2.3 Start / stop / logs
 
